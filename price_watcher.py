@@ -39,31 +39,85 @@ def parse_price(value):
         return None
     return float(m.group(1).replace(" ", "").replace(".", "").replace(",", "."))
 
+```python
 def extract_product(soup):
-    # Prefer Product JSON-LD where title and price are associated.
-    for node in soup.select('script[type="application/ld+json"]'):
-        try:
-            data = json.loads(node.string or node.get_text())
-        except Exception:
-            continue
+    """Extract a price only when it can be associated with product data."""
+
+    def read_product(data):
+        """Walk JSON-LD product structures, including nested graphs."""
         stack = data if isinstance(data, list) else [data]
+
         while stack:
             item = stack.pop()
+
+            if isinstance(item, list):
+                stack.extend(item)
+                continue
+
             if not isinstance(item, dict):
                 continue
-            if "@graph" in item and isinstance(item["@graph"], list):
-                stack.extend(item["@graph"])
-            title = str(item.get("name", ""))
-            offers = item.get("offers", {})
-            if isinstance(offers, list):
-                offers = offers[0] if offers else {}
-            price = None
-            if isinstance(offers, dict):
-                price = parse_price(offers.get("price") or offers.get("lowPrice"))
-            if title and price is not None:
-                return title, price
 
-    # Fallback: read explicit product-price metadata.
+            if isinstance(item.get("@graph"), list):
+                stack.extend(item["@graph"])
+
+            item_type = item.get("@type", "")
+            if isinstance(item_type, list):
+                is_product = "Product" in item_type
+            else:
+                is_product = item_type == "Product"
+
+            if not is_product:
+                continue
+
+            title = str(item.get("name", "")).strip()
+            offers = item.get("offers", [])
+            if isinstance(offers, dict):
+                offers = [offers]
+            if not isinstance(offers, list):
+                continue
+
+            for offer in offers:
+                if not isinstance(offer, dict):
+                    continue
+
+                price_value = (
+                    offer.get("price")
+                    or offer.get("lowPrice")
+                    or offer.get("priceSpecification", {}).get("price")
+                    if isinstance(offer.get("priceSpecification", {}), dict)
+                    else offer.get("price") or offer.get("lowPrice")
+                )
+
+                price = parse_price(price_value)
+                if title and price is not None:
+                    return title, price
+
+        return None, None
+
+    # 1. Prefer structured Product JSON-LD.
+    for node in soup.select('script[type="application/ld+json"]'):
+        raw = node.string or node.get_text()
+        if not raw:
+            continue
+
+        try:
+            data = json.loads(raw)
+        except (ValueError, TypeError):
+            continue
+
+        title, price = read_product(data)
+        if title and price is not None:
+            return title, price
+
+    # 2. Explicit product price metadata.
+    title_tag = soup.select_one('meta[property="og:title"]')
+    h1 = soup.find("h1")
+    title = (
+        title_tag.get("content", "").strip() if title_tag else ""
+    ) or (
+        h1.get_text(" ", strip=True) if h1 else ""
+    )
+
     for selector in (
         'meta[property="product:price:amount"]',
         'meta[property="og:price:amount"]',
@@ -72,32 +126,17 @@ def extract_product(soup):
         tag = soup.select_one(selector)
         if tag:
             price = parse_price(tag.get("content") or tag.get("value"))
-            if price is not None:
-                title_tag = soup.select_one('meta[property="og:title"]')
-                h1 = soup.find("h1")
-                title = (
-                    title_tag.get("content", "")
-                    if title_tag else ""
-                ) or (
-                    h1.get_text(" ", strip=True) if h1 else ""
-                ) or (
-                    soup.title.get_text(" ", strip=True)
-                    if soup.title else ""
-                )
+            if title and price is not None:
                 return title, price
 
-    # Conservative fallback: page title plus common visible price patterns.
-    title = soup.title.get_text(" ", strip=True) if soup.title else ""
-    text = soup.get_text(" ", strip=True)
-    for pattern in (
-        r'"price"\s*:\s*"?(\\d+(?:[.,]\d{2})?)"?',
-        r'(\d{2,4}[.,]\d{2})\s*€',
-    ):
-        m = re.search(pattern, text, re.I)
-        if m:
-            return title, parse_price(m.group(1) + (" €" if "€" not in m.group(1) else ""))
-    return title, None
+    # 3. No unverified generic price fallback:
+    # never mistake shipping, a discount, or another product's price
+    # for the actual TTC450 Ultra price.
+    if not title and soup.title:
+        title = soup.title.get_text(" ", strip=True)
 
+    return title, None
+```
 def valid_exact_model(title):
     t = re.sub(r"[-_]+", " ", title.lower())
     has_ultra = "ultra" in t and ("ttc450" in t.replace(" ", "") or "ttc 450" in t)
