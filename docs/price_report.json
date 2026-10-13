@@ -1,0 +1,43 @@
+{
+  "checked_at": "2026-10-13T08:01:52.141303+00:00",
+  "results": [
+    {
+      "shop": "Amazon",
+      "url": "https://www.amazon.de/dp/B0G4WBRMRH",
+      "status": "unverified",
+      "reason": "Kein zuverlässig zuordenbarer Preis gefunden."
+    },
+    {
+      "shop": "AliExpress",
+      "url": "https://de.aliexpress.com/item/1005013336220421.html",
+      "status": "unverified",
+      "reason": "Kein zuverlässig zuordenbarer Preis gefunden."
+    },
+    {
+      "shop": "TwoTrees EU",
+      "url": "https://eu.twotrees3d.com/de/products/twotrees-ttc450-ultra-cnc-router-machine",
+      "title": "Twotrees TTC450 Ultra CNC-Fräsmaschine für Desktop-Gravuren",
+      "listed_price": 689.0,
+      "status": "shipping_unknown",
+      "reason": "Versandkosten bitte in config.json ergänzen; Preis nicht als Endpreis werten."
+    },
+    {
+      "shop": "3DJake",
+      "url": "https://www.3djake.de/twotrees/ttc450-ultra-cnc-fraesmaschine",
+      "title": "Twotrees TTC450 Ultra CNC Fräsmaschine, 1 Stk",
+      "listed_price": 599.0,
+      "shipping": 0.0,
+      "total": 599.0,
+      "status": "over_threshold"
+    },
+    {
+      "shop": "Geekbuying",
+      "url": "https://de.geekbuying.com/item/TWO-TREES-TTC450-Ultra-CNC-Fraesmaschine-10003839.html",
+      "title": "TWO TREES TTC450 Ultra CNC Fr&#228;smaschine – 500W Spindel, 3,5&quot; Touchscreen, 460x460x100mm Arbeitsbereich, Dualer CNC &amp; Lasermodus",
+      "listed_price": 749.0,
+      "status": "shipping_unknown",
+      "reason": "Versandkosten bitte in config.json ergänzen; Preis nicht als Endpreis werten."
+    }
+  ],
+  "note": "Only successfully parsed and title-validated prices are considered for alerts."
+}
