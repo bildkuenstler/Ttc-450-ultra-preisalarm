@@ -39,7 +39,6 @@ def parse_price(value):
         return None
     return float(m.group(1).replace(" ", "").replace(".", "").replace(",", "."))
 
-```python
 def extract_product(soup):
     """Extract a price only when it can be associated with product data."""
 
@@ -136,7 +135,7 @@ def extract_product(soup):
         title = soup.title.get_text(" ", strip=True)
 
     return title, None
-```
+
 def valid_exact_model(title):
     t = re.sub(r"[-_]+", " ", title.lower())
     has_ultra = "ultra" in t and ("ttc450" in t.replace(" ", "") or "ttc 450" in t)
