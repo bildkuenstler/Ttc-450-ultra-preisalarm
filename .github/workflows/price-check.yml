@@ -1,0 +1,38 @@
+name: TTC450 Ultra price check
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 7 * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  check-prices:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - name: Check prices and send email alerts
+        env:
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          ALERT_EMAIL_FROM: ${{ secrets.ALERT_EMAIL_FROM }}
+          ALERT_EMAIL_TO: ${{ secrets.ALERT_EMAIL_TO }}
+        run: python price_watcher.py
+      - name: Publish latest report for the web app
+        run: |
+          mkdir -p docs
+          cp price_report.json docs/price_report.json
+      - name: Save alert history and report
+        run: |
+          git config user.name "TTC450 Price Watcher"
+          git config user.email "actions@users.noreply.github.com"
+          git add last_alerts.json price_report.json docs/price_report.json
+          git diff --cached --quiet || (git commit -m "Update price check results" && git push)

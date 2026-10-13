@@ -1,0 +1,11 @@
+TTC450 Ultra Preisalarm – Handy-Web-App
+
+1. Inhalt des ZIP in ein GitHub-Repository auf dem Branch main hochladen.
+2. config.json: genaue TTC450-Ultra-Basisproduktlinks und bestätigte Versandkosten eintragen.
+3. E-Mail-Secrets für GitHub Actions hinterlegen (siehe README.md).
+4. Actions aktivieren und den Workflow „TTC450 Ultra price check“ manuell starten.
+5. Repository Settings → Pages → Source „GitHub Actions“ auswählen.
+6. Nach dem Pages-Deployment die veröffentlichte URL auf Android in Chrome öffnen.
+7. Chrome-Menü ⋮ → „App installieren“ oder „Zum Startbildschirm hinzufügen“.
+
+Das Handy muss nicht ständig laufen. Die Cloud prüft einmal täglich; die App zeigt den letzten Prüfbericht.

@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#172a3a">
+  <meta name="description" content="Preisüberwachung für den TwoTrees TTC450 Ultra.">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <title>TTC450 Ultra Preisalarm</title>
+  <style>
+    :root { color-scheme: light; --ink:#172a3a; --muted:#5d6b76; --line:#dce3e8; --bg:#f4f7f9; --card:#fff; --green:#176b46; --amber:#8a5700; --red:#a33333; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif; }
+    header { background:var(--ink); color:white; padding:24px 18px 28px; }
+    header .wrap, main { max-width:900px; margin:auto; }
+    .eyebrow { text-transform:uppercase; letter-spacing:.11em; font-size:.75rem; opacity:.75; font-weight:700; }
+    h1 { font-size:clamp(1.6rem,5vw,2.35rem); line-height:1.12; margin:.45rem 0 .6rem; }
+    header p { margin:0; opacity:.85; max-width:620px; }
+    main { padding:18px; }
+    .summary { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-bottom:16px; }
+    .metric,.panel,.offer { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:15px; box-shadow:0 2px 8px #172a3a08; }
+    .metric .label { font-size:.82rem; color:var(--muted); }
+    .metric .value { font-weight:800; font-size:clamp(1.15rem,4vw,1.65rem); margin-top:5px; }
+    h2 { font-size:1.12rem; margin:0 0 12px; }
+    .toolbar { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
+    button,.button { font:inherit; border:1px solid #aebbc4; background:white; color:var(--ink); padding:9px 13px; border-radius:10px; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; justify-content:center; }
+    button:active { transform:translateY(1px); }
+    .offers { display:grid; gap:10px; }
+    .offer-head { display:flex; justify-content:space-between; gap:12px; align-items:flex-start; }
+    .shop { font-weight:750; font-size:1.03rem; }
+    .status { font-size:.78rem; font-weight:700; border-radius:999px; padding:4px 8px; white-space:nowrap; background:#edf1f4; color:#42515c; }
+    .status.good { background:#dff4e8; color:var(--green); }
+    .status.warn { background:#fff0d2; color:var(--amber); }
+    .status.bad { background:#fbe5e5; color:var(--red); }
+    .price { font-size:1.65rem; font-weight:850; margin:10px 0 0; }
+    .sub { color:var(--muted); font-size:.88rem; }
+    .offer a { margin-top:12px; }
+    .notice { padding:12px 14px; border-radius:12px; background:#eaf0f4; color:#334653; font-size:.9rem; margin-top:14px; }
+    .error { background:#fbe5e5; color:#842b2b; }
+    .empty { padding:22px; text-align:center; border:1px dashed #bac6ce; border-radius:14px; color:var(--muted); background:#fff; }
+    footer { max-width:900px; padding:0 18px 26px; margin:auto; color:var(--muted); font-size:.82rem; }
+    .install { display:none; }
+    @media(max-width:560px) { .summary { grid-template-columns:1fr 1fr; } .summary .metric:last-child { grid-column:1/-1; } .metric { padding:12px; } .offer-head { align-items:flex-start; } }
+  </style>
+</head>
+<body>
+<header><div class="wrap">
+  <div class="eyebrow">Cloud-Preisüberwachung</div>
+  <h1>TwoTrees TTC450 Ultra</h1>
+  <p>Preisübersicht für das Basismodell – Zielpreis 500 €, Dealalarm bis 550 €, jeweils inklusive bestätigtem Versand.</p>
+</div></header>
+<main>
+  <section class="summary" aria-label="Preisübersicht">
+    <div class="metric"><div class="label">Bester bestätigter Preis</div><div class="value" id="bestPrice">—</div></div>
+    <div class="metric"><div class="label">Kaufalarm</div><div class="value">≤ 500 €</div></div>
+    <div class="metric"><div class="label">Dealalarm</div><div class="value">≤ 550 €</div></div>
+  </section>
+  <section class="panel">
+    <div class="toolbar">
+      <h2>Angebote der Händler</h2>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button id="refreshBtn" type="button">Aktualisieren</button>
+        <button id="installBtn" class="install" type="button">App installieren</button>
+      </div>
+    </div>
+    <div id="lastCheck" class="sub" aria-live="polite">Lade letzten Prüfbericht …</div>
+    <div id="offers" class="offers" style="margin-top:12px">
+      <div class="empty">Preisbericht wird geladen …</div>
+    </div>
+    <div id="message" class="notice">Die Prüfung läuft unabhängig vom Handy in der Cloud. Die Web-App zeigt den letzten verfügbaren Bericht; sie prüft Händlerpreise nicht selbst.</div>
+  </section>
+</main>
+<footer>
+  <p>Wichtig: Händlerseiten können automatisierte Abrufe blockieren oder Preise erst per JavaScript anzeigen. „Nicht verifiziert“ bedeutet ausdrücklich nicht, dass der Artikel ausverkauft oder teuer ist. Preise und Versand vor dem Kauf immer im Shop prüfen.</p>
+</footer>
+<script>
+const reportUrl = './price_report.json';
+const eur = n => new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'}).format(n);
+const niceDate = s => { if(!s) return 'Noch kein Prüfzeitpunkt vorhanden'; const d=new Date(s); return Number.isNaN(d.getTime())?s:'Letzte Prüfung: '+d.toLocaleString('de-DE'); };
+function statusInfo(r) {
+  if (r.status === 'ok' && typeof r.total === 'number' && r.total <= 500) return ['Kaufalarm','good'];
+  if (r.status === 'ok' && typeof r.total === 'number' && r.total <= 550) return ['Dealalarm','warn'];
+  if (r.status === 'ok') return ['Über 550 €',''];
+  if (r.status === 'shipping_unknown') return ['Versand offen','warn'];
+  if (r.status === 'rejected') return ['Modell nicht bestätigt','bad'];
+  return ['Preis nicht verifiziert','bad'];
+}
+function render(data) {
+  const rows = Array.isArray(data.results) ? data.results : [];
+  const valid = rows.filter(r => r.status === 'ok' && typeof r.total === 'number').sort((a,b)=>a.total-b.total);
+  document.querySelector('#bestPrice').textContent = valid.length ? eur(valid[0].total) : '—';
+  document.querySelector('#lastCheck').textContent = niceDate(data.checked_at);
+  const holder = document.querySelector('#offers'); holder.replaceChildren();
+  if (!rows.length) {
+    holder.innerHTML = '<div class="empty">Im Bericht sind noch keine Händlerangebote enthalten. Starte zuerst den Cloud-Workflow.</div>';
+    return;
+  }
+  rows.forEach(r => {
+    const [label, cls] = statusInfo(r);
+    const card = document.createElement('article'); card.className='offer';
+    const head = document.createElement('div'); head.className='offer-head';
+    const shop = document.createElement('div'); shop.className='shop'; shop.textContent=r.shop || 'Händler';
+    const badge = document.createElement('span'); badge.className='status '+cls; badge.textContent=label;
+    head.append(shop,badge); card.append(head);
+    const title = document.createElement('div'); title.className='sub'; title.style.marginTop='5px'; title.textContent=r.title || r.reason || 'Noch kein zuverlässig lesbarer Angebotstitel'; card.append(title);
+    if (typeof r.total === 'number') {
+      const p=document.createElement('div'); p.className='price'; p.textContent=eur(r.total); card.append(p);
+      const detail=document.createElement('div'); detail.className='sub'; detail.textContent='Artikel '+eur(r.listed_price)+' + Versand '+eur(r.shipping); card.append(detail);
+    } else if (typeof r.listed_price === 'number') {
+      const p=document.createElement('div'); p.className='price'; p.textContent=eur(r.listed_price); card.append(p);
+      const detail=document.createElement('div'); detail.className='sub'; detail.textContent='Versand nicht eingerechnet – Endpreis unbestätigt'; card.append(detail);
+    } else {
+      const detail=document.createElement('div'); detail.className='sub'; detail.style.marginTop='8px'; detail.textContent=r.reason || 'Keine verlässlichen Preisdaten'; card.append(detail);
+    }
+    if (r.url) { const a=document.createElement('a'); a.className='button'; a.href=r.url; a.target='_blank'; a.rel='noopener noreferrer'; a.textContent='Angebot im Shop öffnen'; card.append(a); }
+    holder.append(card);
+  });
+}
+async function loadReport() {
+  const btn=document.querySelector('#refreshBtn'); btn.disabled=true; btn.textContent='Lade …';
+  try {
+    const response=await fetch(reportUrl+'?t='+Date.now(),{cache:'no-store'});
+    if(!response.ok) throw new Error('Noch kein Bericht verfügbar (HTTP '+response.status+').');
+    render(await response.json());
+    document.querySelector('#message').className='notice';
+    document.querySelector('#message').textContent='Die Prüfung läuft unabhängig vom Handy in der Cloud. Die Web-App zeigt den letzten verfügbaren Bericht; sie prüft Händlerpreise nicht selbst.';
+  } catch(e) {
+    document.querySelector('#offers').innerHTML='<div class="empty">Noch kein Preisbericht verfügbar.</div>';
+    document.querySelector('#lastCheck').textContent='Preisbericht noch nicht geladen';
+    document.querySelector('#message').className='notice error';
+    document.querySelector('#message').textContent='Bitte erst den Cloud-Workflow einmal starten und danach erneut laden. '+e.message;
+  } finally { btn.disabled=false; btn.textContent='Aktualisieren'; }
+}
+document.querySelector('#refreshBtn').addEventListener('click',loadReport);
+let installPrompt;
+window.addEventListener('beforeinstallprompt', e=>{e.preventDefault();installPrompt=e;const b=document.querySelector('#installBtn');b.style.display='inline-flex';b.addEventListener('click',async()=>{if(!installPrompt)return;installPrompt.prompt();await installPrompt.userChoice;installPrompt=null;b.style.display='none';},{once:true});});
+if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+loadReport();
+</script>
+</body>
+</html>

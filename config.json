@@ -1,0 +1,36 @@
+{
+  "target_price_eur": 500,
+  "deal_threshold_eur": 550,
+  "shops": {
+    "Amazon": [
+      {
+        "url": "https://www.amazon.de/dp/B0G4WBRMRH",
+        "shipping_eur": null
+      }
+    ],
+    "AliExpress": [
+      {
+        "url": "https://de.aliexpress.com/item/1005013336220421.html",
+        "shipping_eur": null
+      }
+    ],
+    "TwoTrees EU": [
+      {
+        "url": "https://eu.twotrees3d.com/de/products/twotrees-ttc450-ultra-cnc-router-machine",
+        "shipping_eur": null
+      }
+    ],
+    "3DJake": [
+      {
+        "url": "https://www.3djake.de/twotrees/ttc450-ultra-cnc-fraesmaschine",
+        "shipping_eur": 0
+      }
+    ],
+    "Geekbuying": [
+      {
+        "url": "https://de.geekbuying.com/item/TWO-TREES-TTC450-Ultra-CNC-Fraesmaschine-10003839.html",
+        "shipping_eur": null
+      }
+    ]
+  }
+}
