@@ -1,0 +1,51 @@
+
+name: TTC450 Email Test
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  send-test-email:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Gmail test email
+        env:
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          ALERT_EMAIL_FROM: ${{ secrets.ALERT_EMAIL_FROM }}
+          ALERT_EMAIL_TO: ${{ secrets.ALERT_EMAIL_TO }}
+        run: |
+          python - <<'PY'
+          import os
+          import ssl
+          import smtplib
+          from email.message import EmailMessage
+
+          msg = EmailMessage()
+          msg["Subject"] = "[TTC450 Ultra] E-Mail-Test erfolgreich"
+          msg["From"] = os.environ["ALERT_EMAIL_FROM"]
+          msg["To"] = os.environ["ALERT_EMAIL_TO"]
+          msg.set_content(
+              "Dies ist eine Testmail deiner TTC450-Ultra-Preiswatch.\n\n"
+              "Der Gmail-SMTP-Versand funktioniert."
+          )
+
+          with smtplib.SMTP_SSL(
+              os.environ["SMTP_HOST"],
+              int(os.environ.get("SMTP_PORT", "465")),
+              context=ssl.create_default_context(),
+              timeout=30,
+          ) as server:
+              server.login(
+                  os.environ["SMTP_USERNAME"],
+                  os.environ["SMTP_PASSWORD"],
+              )
+              server.send_message(msg)
+
+          print("Testmail erfolgreich an den SMTP-Server übergeben.")
+          PY
