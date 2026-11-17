@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-11-16T17:06:14.923046+00:00",
+  "checked_at": "2026-11-17T16:55:04.702888+00:00",
   "results": [
     {
       "shop": "Amazon",
@@ -25,9 +25,9 @@
       "shop": "3DJake",
       "url": "https://www.3djake.de/twotrees/ttc450-ultra-cnc-fraesmaschine",
       "title": "Twotrees TTC450 Ultra CNC Fräsmaschine, 1 Stk",
-      "listed_price": 599.0,
+      "listed_price": 599.99,
       "shipping": 0.0,
-      "total": 599.0,
+      "total": 599.99,
       "status": "over_threshold"
     },
     {
