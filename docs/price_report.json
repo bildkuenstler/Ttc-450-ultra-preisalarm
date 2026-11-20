@@ -1,11 +1,11 @@
 {
-  "checked_at": "2026-11-19T16:37:11.879318+00:00",
+  "checked_at": "2026-11-20T16:12:13.961731+00:00",
   "results": [
     {
       "shop": "Amazon",
       "url": "https://www.amazon.de/dp/B0G4WBRMRH",
       "status": "unverified",
-      "reason": "Kein zuverlässig zuordenbarer Preis gefunden."
+      "reason": "Abfrage fehlgeschlagen (HTTPError); manuell prüfen."
     },
     {
       "shop": "AliExpress",
